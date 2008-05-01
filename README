@@ -1,3 +1,6 @@
+= Merb fork of BackgrounDRb
+Based on the 1.0.3 version of backgroundrb this is a hacked port to MERB.  Some areas need tyding up but it works for all basic cases.  Contributions welcome!
+
 = BackgrounDRb
 
 BackgrounDRb is a Ruby job server and scheduler. Its main intent is to be
