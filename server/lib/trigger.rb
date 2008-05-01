@@ -1,4 +1,4 @@
-module BackgrounDRb
+module BackgrounDRbMerb
   class Trigger
 
     attr_accessor :start_time, :end_time, :repeat_interval

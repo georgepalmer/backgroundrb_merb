@@ -1,4 +1,4 @@
-module BackgrounDRb
+module BackgrounDRbMerb
   class CronTrigger
     WDAYS = { 0 => "Sunday",1 => "Monday",2 => "Tuesday",3 => "Wednesday", 4 => "Thursday", 5 => "Friday", 6 => "Saturday" }
     LeapYearMonthDays = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]

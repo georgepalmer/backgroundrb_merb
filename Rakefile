@@ -1,70 +1,42 @@
-require 'rake'
 require 'rubygems'
-require 'rake/testtask'
-require 'rake/rdoctask'
-require 'spec/rake/spectask'
-require 'rake/contrib/sshpublisher'
+require 'rake/gempackagetask'
 
-desc 'Default: run unit tests.'
-task :default => :test
+PLUGIN = "backgroundrb_merb"
+NAME = "backgroundrb_merb"
+VERSION = "1.0.3"
+AUTHOR = "George Palmer"
+EMAIL = "george.palmer@gmail.com"
+HOMEPAGE = "not yet"
+SUMMARY = "Merb plugin that provides backgroundrb"
 
-desc 'Test the backgroundrb plugin.'
-Rake::TestTask.new(:test) do |t|
-  t.libs << 'lib'
-  t.pattern = 'test/**/*_test.rb'
-  t.verbose = true
+spec = Gem::Specification.new do |s|
+  s.name = NAME
+  s.version = VERSION
+  s.platform = Gem::Platform::RUBY
+  s.has_rdoc = true
+  s.extra_rdoc_files = ["README", "LICENSE", 'TODO']
+  s.summary = SUMMARY
+  s.description = s.summary
+  s.author = AUTHOR
+  s.email = EMAIL
+  s.homepage = HOMEPAGE
+  s.add_dependency('merb', '>= 0.9.2')
+  s.require_path = 'lib'
+  s.autorequire = PLUGIN
+  s.files = %w(LICENSE README Rakefile TODO) + Dir.glob("{config,generators,lib,script,server,specs}/**/*")
 end
 
-desc "Run all specs"
-Spec::Rake::SpecTask.new('specs') do |t|
-  t.spec_opts = ["--format", "specdoc"]
-  t.libs = ['lib', 'server/lib' ]
-  t.spec_files = FileList['specs/**/*_spec.rb']
+Rake::GemPackageTask.new(spec) do |pkg|
+  pkg.gem_spec = spec
 end
 
-desc "RCov"
-Spec::Rake::SpecTask.new('rcov') do |t|
-  t.spec_files = FileList['specs/**/*_spec.rb']
-  t.libs = ['lib', 'server/lib' ]
-  t.rcov = true
+task :install => [:package] do
+  sh %{sudo gem install pkg/#{NAME}-#{VERSION}}
 end
 
-desc 'Generate documentation for the backgroundrb plugin.'
-Rake::RDocTask.new(:rdoc) do |rdoc|
-  rdoc.rdoc_dir = 'rdoc'
-  rdoc.title    = 'Backgroundrb'
-  rdoc.options << '--line-numbers' << '--inline-source'
-  rdoc.rdoc_files.include('README')
-  rdoc.rdoc_files.include('LICENSE')
-  rdoc.rdoc_files.include('lib/*.rb')
-  rdoc.rdoc_files.include('lib/backgroundrb/*.rb')
-  rdoc.rdoc_files.include('server/*.rb')
-  rdoc.rdoc_files.include('server/lib/*.rb')
-  rdoc.template = 'jamis'
-end
-
-module Rake
-  class BackgrounDRbPublisher <  SshDirPublisher
-    attr_reader :project, :proj_id, :user
-    def initialize(projname, user)
-      super(
-            "#{user}@rubyforge.org",
-            "/var/www/gforge-projects/backgroundrb",
-            "doc/output")
-    end
-  end
-end
-
-desc "Publish documentation to Rubyforge"
-task :publish_rdoc => [:rdoc] do
-  user = ENV['RUBYFORGE_USER']
-  publisher = Rake::BackgrounDRbPublisher.new('backgroundrb', user)
-  publisher.upload
-end
-
-namespace :git do 
-  desc "Push changes to central git repo"
-  task :push do 
-    sh("git push origin master")
+namespace :jruby do
+  desc "Run :package and install the resulting .gem with jruby"
+  task :install => :package do
+    sh %{#{SUDO} jruby -S gem install pkg/#{NAME}-#{Merb::VERSION}.gem --no-rdoc --no-ri}
   end
 end

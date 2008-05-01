@@ -1,4 +1,4 @@
-module BackgrounDRb
+module BackgrounDRbMerb
   # this class is a dummy class that implements things required for passing data to
   # actual logger worker
   class PacketLogger
@@ -182,9 +182,9 @@ module BackgrounDRb
     # does initialization of worker stuff and invokes create method in
     # user defined worker class
     def worker_init
-      @config_file = BackgrounDRb::Config.read_config("#{RAILS_HOME}/config/backgroundrb.yml")
+      @config_file = BackgrounDRbMerb::Config.read_config("#{Merb.root}/config/backgroundrb.yml")
       log_flag = @config_file[:backgroundrb][:debug_log].nil? ? true : @config_file[:backgroundrb][:debug_log]
-      load_rails_env
+      load_merb_env
       @logger = PacketLogger.new(self,log_flag)
       @thread_pool = ThreadPool.new(pool_size || 20,@logger)
 
@@ -260,9 +260,9 @@ module BackgrounDRb
         case value[:trigger_args]
         when String
           cron_args = value[:trigger_args] || "0 0 0 0 0"
-          trigger = BackgrounDRb::CronTrigger.new(cron_args)
+          trigger = BackgrounDRbMerb::CronTrigger.new(cron_args)
         when Hash
-          trigger = BackgrounDRb::Trigger.new(value[:trigger_args])
+          trigger = BackgrounDRbMerb::Trigger.new(value[:trigger_args])
         end
         @worker_method_triggers[key] = { :trigger => trigger,:data => value[:data],:runtime => trigger.fire_after_time(Time.now).to_i }
       end
@@ -345,14 +345,11 @@ module BackgrounDRb
     end
     
     private
-    def load_rails_env
-      db_config_file = YAML.load(ERB.new(IO.read("#{RAILS_HOME}/config/database.yml")).result)
+    def load_merb_env
+      db_config_file = YAML.load(ERB.new(IO.read("#{Merb.root}/config/database.yml")).result)
       run_env = @config_file[:backgroundrb][:environment] || 'development'
-      ENV["RAILS_ENV"] = run_env
-      RAILS_ENV.replace(run_env) if defined?(RAILS_ENV)
-      ActiveRecord::Base.establish_connection(db_config_file[run_env])
+      ActiveRecord::Base.establish_connection(db_config_file[run_env.to_sym])
       ActiveRecord::Base.allow_concurrency = true
     end
-
   end # end of class MetaWorker
 end # end of module BackgrounDRb

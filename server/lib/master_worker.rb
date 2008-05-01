@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-module BackgrounDRb
+module BackgrounDRbMerb
   # Class wraps a logger object for debugging internal errors within server
   class DebugMaster
     attr_accessor :log_mode,:logger,:log_flag
@@ -9,7 +9,7 @@ module BackgrounDRb
       if @log_mode == :foreground
         @logger = ::Logger.new(STDOUT)
       else
-        @logger = ::Logger.new("#{RAILS_HOME}/log/backgroundrb_#{CONFIG_FILE[:backgroundrb][:port]}_debug.log")
+        @logger = ::Logger.new("#{Merb.root}/log/backgroundrb_#{CONFIG_FILE[:backgroundrb][:port]}_debug.log")
       end
     end
 
@@ -154,12 +154,12 @@ module BackgrounDRb
     attr_accessor :config_file,:reloadable_workers,:worker_triggers,:reactor
     def initialize
       raise "Running old Ruby version, upgrade to Ruby >= 1.8.5" unless check_for_ruby_version
-      @config_file = BackgrounDRb::Config.read_config("#{RAILS_HOME}/config/backgroundrb.yml")
+      @config_file = BackgrounDRbMerb::Config.read_config("#{Merb.root}/config/backgroundrb.yml")
 
       log_flag = CONFIG_FILE[:backgroundrb][:debug_log].nil? ? true : CONFIG_FILE[:backgroundrb][:debug_log]
       debug_logger = DebugMaster.new(CONFIG_FILE[:backgroundrb][:log],log_flag)
 
-      load_rails_env
+      load_merb_env
 
       find_reloadable_worker
 
@@ -204,9 +204,9 @@ module BackgrounDRb
         case value[:trigger_args]
         when String
           cron_args = value[:trigger_args] || "0 0 0 0 0"
-          trigger = BackgrounDRb::CronTrigger.new(cron_args)
+          trigger = BackgrounDRbMerb::CronTrigger.new(cron_args)
         when Hash
-          trigger = BackgrounDRb::Trigger.new(value[:trigger_args])
+          trigger = BackgrounDRbMerb::Trigger.new(value[:trigger_args])
         end
         worker_method_triggers[key] = { :trigger => trigger,:data => value[:data],:runtime => trigger.fire_after_time(Time.now).to_i }
       end
@@ -257,21 +257,18 @@ module BackgrounDRb
       end
     end
 
-    def load_rails_env
+    def load_merb_env
       run_env = CONFIG_FILE[:backgroundrb][:environment] || 'development'
-      ENV["RAILS_ENV"] = run_env
-      RAILS_ENV.replace(run_env) if defined?(RAILS_ENV)
-      require RAILS_HOME + '/config/environment.rb'
       lazy_load = CONFIG_FILE[:backgroundrb][:lazy_load].nil? ? true : CONFIG_FILE[:backgroundrb][:lazy_load].nil?
-      p lazy_load
-      load_rails_models unless lazy_load
+      require_merb_files unless lazy_load
       ActiveRecord::Base.allow_concurrency = true
     end
 
-    def load_rails_models
-      model_root = RAILS_HOME + "/app/models"
-      models = Dir["#{model_root}/**/*.rb"]
-      models.each { |x|
+    def require_merb_files
+      debug_logger = DebugMaster.new(CONFIG_FILE[:backgroundrb][:log],true)
+       
+      files = Dir["#{Merb.root}/app/models/**/*.rb"]
+      files.each { |x|
         begin
           require x
         rescue LoadError
@@ -301,6 +298,3 @@ module BackgrounDRb
 
   end # end of module BackgrounDRb
 end
-
-
-
