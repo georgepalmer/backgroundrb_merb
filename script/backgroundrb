@@ -1,5 +1,8 @@
 #!/usr/bin/env ruby
 
+# Support frozen merb environment
+$LOAD_PATH.unshift(File.expand_path(File.dirname(__FILE__) + "/../framework/merb-core/lib"))
+
 # Add backgroundrb folders to load path
 backgroundrb_dir = Dir.glob(File.expand_path(File.dirname(__FILE__) + "/../gems/gems/backgroundrb_merb*")).last
 ["lib/backgroundrb_merb", "server/lib"].each { |x| $LOAD_PATH.unshift(backgroundrb_dir + "/#{x}")}
