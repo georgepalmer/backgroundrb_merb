@@ -11,7 +11,7 @@ $LOAD_PATH.unshift(WORKER_ROOT)
 # Take preference to local merb gems
 require "rubygems"
 Gem.clear_paths
-Gem.path.unshift(File.expand_path(File.dirname(__FILE__) + "/../gems/gems"))
+Gem.path.unshift(File.expand_path(File.dirname(__FILE__) + "/../gems"))
 
 # Require dependencies
 require 'merb-core'
