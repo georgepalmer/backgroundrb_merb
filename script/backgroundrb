@@ -29,7 +29,7 @@ require "master_worker.rb"
 # Parse CLI options
 BackgrounDRbMerb::Config.parse_cmd_options ARGV
 CONFIG_FILE = BackgrounDRbMerb::Config.read_config("#{Merb.root}/config/backgroundrb.yml")
-pid_file = "#{Merb.root}/tmp/backgroundrb_#{CONFIG_FILE[:backgroundrb][:port]}.pid"
+pid_file = "#{Merb.root}/tmp/pids/backgroundrb_#{CONFIG_FILE[:backgroundrb][:port]}.pid"
 SERVER_LOGGER = "#{Merb.root}/log/backgroundrb_server_#{CONFIG_FILE[:backgroundrb][:port]}.log"
 
 case ARGV[0]
